@@ -18,8 +18,12 @@ jobs:
         db: ["sqlite", "mysql", "pgsql"]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         include:
-          - {db: "sqlite", python-version: '3.9', tox: style}
-          - {db: "sqlite", python-version: '3.9', tox: typing}
+          - db: "sqlite"
+            python-version: '3.9'
+            tox: style
+          - db: "sqlite"
+            python-version: '3.9'
+            tox: typing
 
     steps:
     - name: Shutdown Ubuntu MySQL (SUDO)
