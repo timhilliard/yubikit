@@ -26,7 +26,7 @@ jobs:
     - name: Generate Tox version
       id: tox
       run: |
-        if [ -z "${{ matrix.tox }}" ]; then echo "py$(echo '${{ matrix.python-version }}' | tr -d '.')"; else echo "${{ matrix.tox }}"; fi
+        test/tox-version.sh "${{ matrix.python-version }}" "${{ matrix.tox }}"
     - name: Shutdown Ubuntu MySQL (SUDO)
       run: sudo service mysql stop # Shutdown the Default MySQL, "sudo" is necessary, please do not remove it
       if: matrix.db == 'mysql'
