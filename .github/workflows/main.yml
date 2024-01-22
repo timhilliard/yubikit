@@ -72,5 +72,5 @@ jobs:
         test/selftest.sh
     - name: Run Tox
       run: |
-        tox -e ${{ steps.vars.outputs.tox }}
+        tox -e ${{ steps.tox.outputs.tox }}
   
