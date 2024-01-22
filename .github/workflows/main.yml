@@ -17,16 +17,20 @@ jobs:
       fail-fast: false
       matrix:
         db: ["sqlite", "mysql", "pgsql"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         include:
-          - {python-version: '3.8', tox: py38}
-          - {python-version: '3.9', tox: py39}
-          - {python-version: '3.10', tox: py310}
-          - {python-version: '3.11', tox: pypy311}
-          - {python-version: '3.12', tox: pypy312}
-          - {python-version: '3.9', tox: style}
-          - {python-version: '3.9', tox: typing}
+          - {db: "sqlite", python-version: '3.9', tox: style}
+          - {db: "sqlite", python-version: '3.9', tox: typing}
 
     steps:
+    - name: Generate Tox version
+      id: tox
+      run: |
+        if [ -z "${{ matrix.tox }}" ]; then
+          echo "py$(echo '${{ matrix.python-version }}' | tr -d '.')"
+        else
+          echo "${{ matrix.tox }}"
+        fi
     - name: Shutdown Ubuntu MySQL (SUDO)
       run: sudo service mysql stop # Shutdown the Default MySQL, "sudo" is necessary, please do not remove it
       if: matrix.db == 'mysql'
@@ -72,5 +76,5 @@ jobs:
         test/selftest.sh
     - name: Run Tox
       run: |
-        tox -e ${{ matrix.tox }}
+        tox -e ${{ steps.tox.outputs.tox }}
   
