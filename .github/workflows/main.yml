@@ -23,4 +23,4 @@ jobs:
     - name: Generate Tox version
       id: tox-version
       run: |
-        echo "tox=$(test/tox-version.sh ${{ matrix.python-version }})" >> $GITHUB_OUTPUT  
+        echo "py${{ matrix.python-version }}"
