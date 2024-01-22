@@ -71,9 +71,9 @@ elif [ "x$DB" = "xsqlite" ]; then
   dbrun_ykksm="sqlite3 $dbfile_ykksm"
   dbrun_ykval="sqlite3 $dbfile_ykval"
   dbrun_yubiauth="sqlite3 $dbfile_yubiauth"
-  $dbrun_ykksm < ykksm-db.sql
-  $dbrun_ykval < ykval-db.sql
-  $dbrun_yubiauth < yubiauth-db.sql
+  $dbrun_ykksm < test/ykksm-db.sql
+  $dbrun_ykval < test/ykval-db.sql
+  $dbrun_yubiauth < test/yubiauth-db.sql
 cat >> /tmp/yubikit.conf << EOF
 DATABASES = {
   'ykksm': {'ENGINE': 'sqlite', 'NAME': '$dbfile_ykksm'},
