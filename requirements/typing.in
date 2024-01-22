@@ -1,0 +1,5 @@
+mypy
+types-mysqlclient
+types-psycopg2
+types-passlib
+types-requests
