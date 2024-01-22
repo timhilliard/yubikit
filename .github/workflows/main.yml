@@ -22,10 +22,6 @@ jobs:
           - {db: "sqlite", python-version: '3.9', tox: typing}
 
     steps:
-    - name: Generate Tox version
-      id: tox
-      run: |
-        echo "tox=$(test/tox-version.sh ${{ matrix.python-version }} ${{ matrix.tox }})" >> $GITHUB_OUTPUT
     - name: Shutdown Ubuntu MySQL (SUDO)
       run: sudo service mysql stop # Shutdown the Default MySQL, "sudo" is necessary, please do not remove it
       if: matrix.db == 'mysql'
@@ -69,6 +65,10 @@ jobs:
         DB: ${{ matrix.db }}
       run: |
         test/selftest.sh
+    - name: Generate Tox version
+      id: tox
+      run: |
+        echo "tox=$(test/tox-version.sh ${{ matrix.python-version }} ${{ matrix.tox }})" >> $GITHUB_OUTPUT
     - name: Run Tox
       run: |
         tox -e ${{ steps.tox.outputs.tox }}
