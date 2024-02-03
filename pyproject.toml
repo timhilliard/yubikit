@@ -3,7 +3,7 @@ name = "yubikit"
 dynamic = ["version"]
 description = "A toolkit for interacting with Yubico OTPs"
 readme = "README.rst"
-license = {file = "LICENSE", name = "MIT License"}
+license = {file = "LICENSE"}
 maintainers = [{name = "Tim Hilliard", email = "timhilliard@gmail.com"}]
 classifiers = [
     "Development Status :: 3 - Alpha",
