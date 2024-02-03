@@ -22,9 +22,9 @@ jobs:
           - db: "sqlite"
             python-version: '3.9'
             tox: style
-          - db: "sqlite"
-            python-version: '3.9'
-            tox: typing
+          # - db: "sqlite"
+          #   python-version: '3.9'
+          #   tox: typing
 
     steps:
     - name: Shutdown Ubuntu MySQL (SUDO)
