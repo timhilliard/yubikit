@@ -31,6 +31,8 @@ from yubikit.ykksm import Decryptor
 from yubikit.yksync import Sync
 from yubikit.ykval import Validator
 
+from typing import Any, Callable, Dict, List
+
 if settings['SYSLOG_WSGI_AUTH']:
     import syslog
     syslog.openlog(ident='yubikit', facility=syslog.LOG_AUTH)
@@ -68,7 +70,7 @@ PERSISTENT_OBJECTS = {}
 REQUIRED_AUTH_PARAMS = ['username', 'password', 'otp']
 
 
-def authenticate(environ, start_response):
+def authenticate(environ: Any, start_response: Any) -> List[bytes]:
     """
     Handle authentications
     """
@@ -131,7 +133,7 @@ def authenticate(environ, start_response):
         return [response.encode()]
 
 
-def decrypt(environ, start_response):
+def decrypt(environ: Any, start_response: Any) -> List[bytes]:
     """
     Handle OTP decryptions
     """
@@ -172,7 +174,7 @@ PARAM_MAP = {
 }
 
 
-def verify(environ, start_response):
+def verify(environ: Any, start_response: Any) -> List[bytes]:
     """
     Handle OTP Validation
     """
@@ -205,7 +207,7 @@ def verify(environ, start_response):
         return wsgi_response(output, start_response, apikey=apikey, extra=extra)
 
 
-def sync(environ, start_response):
+def sync(environ: Any, start_response: Any) -> List[bytes]:
     """
     Handle Sync requests
     """
@@ -237,7 +239,7 @@ def sync(environ, start_response):
                              extra=local_params, status=status_code)
 
 
-def resync(environ, start_response):
+def resync(environ: Any, start_response: Any) -> List[Any]:
     """
     Handle Re-sync requests
     """
@@ -266,7 +268,7 @@ def resync(environ, start_response):
         return [output.encode()]
 
 
-def router(environ, start_response):
+def router(environ: Any, start_response: Any) -> Any:
     """ Simple WSGI router """
     path = environ.get('PATH_INFO', '')
     match = re.match(URI_REGEX, path)
@@ -277,7 +279,7 @@ def router(environ, start_response):
     return func(environ, start_response)
 
 
-def main():
+def main() -> None:
     """ Run a web server to test the application """
     from wsgiref.simple_server import make_server
     logging.basicConfig(format='%(asctime)s %(levelname)s %(module)s %(funcName)s: %(message)s',

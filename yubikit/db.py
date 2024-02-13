@@ -10,12 +10,14 @@ import time
 
 from .config import settings
 
+from typing import Any, Dict, List, Optional
+
 logger = logging.getLogger(__name__)
 
 
 class DBHandler:
     """ Database handler wrapper """
-    def __init__(self, db):
+    def __init__(self, db: str) -> None:
         self.settings = settings['DATABASES'][db]
         # This is not nice, but works well.
         # We need to catch OperationalError in the _execute functon, so
@@ -31,7 +33,7 @@ class DBHandler:
         self.dbdriver = dbdriver
         self._connect()
 
-    def _connect(self):
+    def _connect(self) -> None:
         """ Connect to the database """
         if self.settings.get('ENGINE', 'mysql') == 'mysql':
             self._db = self.dbdriver.connect(self.settings['HOST'],
@@ -48,7 +50,7 @@ class DBHandler:
             self._db = self.dbdriver.connect(self.settings['NAME'])
         self.cursor = self._db.cursor()
 
-    def _execute(self, query, params=None, retry=False):
+    def _execute(self, query: str, params: Any = None, retry: bool = False) -> Any:
         """ Abstract the cursor execute function to handle sqlite syntax """
         if self.settings.get('ENGINE') == 'sqlite':
             if '%s' in query and params:
@@ -73,11 +75,11 @@ class DBHandler:
             logger.exception('Database error: %s', err)
             raise
 
-    def _dictfetchall(self):
+    def _dictfetchall(self) -> List[Dict[Any, Any]]:
         """ Wrapper to return DB results in dict format """
         return [dict(zip([col[0] for col in self.cursor.description], row)) for row in self.cursor.fetchall()]
 
-    def _dictfetchone(self):
+    def _dictfetchone(self) -> Dict[Any, Any]:
         """ Wrapper to return DB results in dict format """
         data = self._dictfetchall()
         if data:
@@ -87,7 +89,7 @@ class DBHandler:
     #################
     # YKAUTH QUERIES
     #################
-    def get_user(self, username):
+    def get_user(self, username: str) -> Dict[Any, Any]:
         """
         Read user information for Yubiauth
         """
@@ -96,10 +98,10 @@ class DBHandler:
                           users.auth AS users_auth
                      FROM users
                     WHERE users.name = %s"""
-        self._execute(query, (username,))
+        self._execute(query, [username])
         return self._dictfetchone()
 
-    def get_token(self, user_id, token_id):
+    def get_token(self, user_id: str, token_id: str) -> Dict[Any, Any]:
         """
         Read user attribute information for Yubiauth
         """
@@ -112,23 +114,23 @@ class DBHandler:
                        ON user_yubikeys.yubikey_id = yubikeys.id
                     WHERE user_yubikeys.user_id = %s
                       AND yubikeys.prefix = %s"""
-        self._execute(query, (user_id, token_id))
+        self._execute(query, [user_id, token_id])
         return self._dictfetchone()
 
     #########################
     # YKVAL / YKSYNC QUERIES
     #########################
-    def get_client_data(self, client_id):
+    def get_client_data(self, client_id: str) -> Dict[Any, Any]:
         """ Lookup client based on the ID """
         query = """SELECT id,
                           secret
                      FROM clients
                     WHERE active = 1
                       AND id = %s"""
-        self._execute(query, (client_id,))
+        self._execute(query, [client_id])
         return self._dictfetchone()
 
-    def get_local_params(self, yk_publicname):
+    def get_local_params(self, yk_publicname: str) -> Dict[Any, Any]:
         """ Get yubikey parameters from DB """
         query = """SELECT active,
                           modified,
@@ -160,7 +162,7 @@ class DBHandler:
         logger.debug('[%s] Auth data: %s', yk_publicname, local_params)
         return local_params
 
-    def add_new_identity(self, identity):
+    def add_new_identity(self, identity: Dict[str, Any]) -> None:
         """ Create new key identity """
         query = """INSERT INTO yubikeys (
                        active,
@@ -185,7 +187,7 @@ class DBHandler:
                 )"""
         self._execute(query, identity)
 
-    def get_queue(self, modified, server_nonce):
+    def get_queue(self, modified: str, server_nonce: str) -> List[Dict[Any, Any]]:
         """
         Read all elements from queue
         """
@@ -199,7 +201,7 @@ class DBHandler:
         self._execute(query, (modified, server_nonce))
         return self._dictfetchall()
 
-    def read_queue(self):
+    def read_queue(self) -> List[Dict[Any, Any]]:
         """
         Read all elements from queue
         """
@@ -212,7 +214,7 @@ class DBHandler:
         self._execute(query)
         return self._dictfetchall()
 
-    def remove_from_queue(self, server, modified, server_nonce):
+    def remove_from_queue(self, server: str, modified: str, server_nonce: str) -> None:
         """
         Remove a single element from queue
         """
@@ -222,7 +224,7 @@ class DBHandler:
                            AND server_nonce = %s"""
         self._execute(query, (server, modified, server_nonce))
 
-    def null_queue(self, server_nonce):
+    def null_queue(self, server_nonce: str) -> None:
         """
         NULL queued_time for remaining entries in queue, to allow
         daemon to take care of them as soon as possible.
@@ -232,7 +234,7 @@ class DBHandler:
                     WHERE server_nonce = %s"""
         self._execute(query, (server_nonce,))
 
-    def update_db_counters(self, params):
+    def update_db_counters(self, params: Dict[Any, Any]) -> None:
         """ Update table with new counter values """
         query = """UPDATE yubikeys
                       SET modified = %(modified)s,
@@ -247,7 +249,7 @@ class DBHandler:
                       AND yk_use < %(yk_use)s))"""
         self._execute(query, params)
 
-    def enqueue(self, otp_params, local_params, server, server_nonce):
+    def enqueue(self, otp_params: Dict[str, Any], local_params: Dict[str, Any], server: str, server_nonce: str) -> None:
         """
         Insert new params into database queue table
         """
@@ -266,7 +268,7 @@ class DBHandler:
         self._execute(query, (int(time.time()), otp_params['modified'],
                               otp_params['otp'], server, server_nonce, info))
 
-    def get_keys(self, yk_publicname):
+    def get_keys(self, yk_publicname: str) -> List[Dict[Any, Any]]:
         """ Get all keys from DB """
         query = """SELECT yk_publicname
                      FROM yubikeys
@@ -281,7 +283,7 @@ class DBHandler:
     ################
     # YKKSM QUERIES
     ################
-    def get_key_and_internalname(self, public_id):
+    def get_key_and_internalname(self, public_id: str) -> Dict[Any, Any]:
         """
         Read token's AESkey and internalname for OTP decryption
         """

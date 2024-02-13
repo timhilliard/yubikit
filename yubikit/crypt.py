@@ -22,6 +22,8 @@ from Crypto.Protocol.KDF import PBKDF1
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import unpad
 
+from typing import Any, Optional
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,25 +59,25 @@ class SHA2:
     """Wrapper for the SHA-256 hashing algorithm."""
     digest_size = 32
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         if args and args[0] is object():
             self._hash = args[0].copy()
         else:
             self._hash = hashlib.new('sha256')
 
-    def copy(self):
+    def copy(self) -> 'SHA2':
         """Make a (mutable) copy of the hash."""
         return SHA2(self._hash.copy())
 
-    def digest(self, *args):
+    def digest(self, *args: Any) -> Any:
         """Calculate the hash digest."""
         return self._hash.digest(*args)
 
-    def hexdigest(self, *args):
+    def hexdigest(self, *args: Any) -> Any:
         """Calculate the hash hexdigest."""
         return self._hash.hexdigest(*args)
 
-    def update(self, *args):
+    def update(self, *args: Any) -> Any:
         """Update the hash."""
         return self._hash.update(*args)
 
@@ -89,7 +91,7 @@ class Crypter:
     mask = '*.*'
     shares = 2
 
-    def __init__(self, keydir):
+    def __init__(self, keydir: str) -> None:
         # Keydir path
         self.keydir = os.path.abspath(keydir)
         # Our key rotation number
@@ -114,22 +116,22 @@ class Crypter:
 
         logging.info('Crypter krn=%d', self.krn)
 
-    def cipher(self, krn=None):
+    def cipher(self, krn: Optional[str] = None) -> Any:
         """Generate a cipher for the given key rotation number."""
         return PKCS1_OAEP.new(
             self.key[krn or self.krn],  # key
             SHA2,                       # digest
         )
 
-    def decrypt(self, ciphertext, krn=None):
+    def decrypt(self, ciphertext: str, krn: Optional[str] = None) -> Any:
         """Decrypt a ciphertext."""
         return self.cipher(krn).decrypt(ciphertext)
 
-    def encrypt(self, plaintext, krn=None):
+    def encrypt(self, plaintext: str, krn: Optional[str] = None) -> Any:
         """Encrypt a plaintext."""
         return self.cipher(krn).encrypt(plaintext)
 
-    def load_keyfile(self, keyfile):
+    def load_keyfile(self, keyfile: str) -> Any:
         """Load a key file."""
         raise NotImplementedError('Implement me in subclass')
 
@@ -139,10 +141,10 @@ class PublicKey(Crypter):
 
     mask = '*.public'
 
-    def decrypt(self, ciphertext, krn=None):
+    def decrypt(self, ciphertext: str, krn: Optional[str] = None) -> Any:
         raise NotImplementedError("Public key can only encrypt")
 
-    def load_keyfile(self, keyfile):
+    def load_keyfile(self, keyfile: str) -> Any:
         with open(keyfile) as handle:
             return RSA.importKey(handle.read())
 
@@ -157,7 +159,7 @@ class PrivateKey(Crypter):
 
     mask = '*.private'
 
-    def load_keyfile(self, keyfile):
+    def load_keyfile(self, keyfile: str) -> Any:
         with open(keyfile) as handle:
             keydata = handle.read()
             try:
@@ -165,7 +167,7 @@ class PrivateKey(Crypter):
             except ValueError:
                 return RSA.importKey(self.load_encrypted_keydata(keydata))
 
-    def load_encrypted_keydata(self, keydata):
+    def load_encrypted_keydata(self, keydata: str) -> Any:
         """Load a key from encrypted keydata (in PEM format)."""
         lines = keydata.strip().replace(' ', '').splitlines()
         if not lines[1].startswith('Proc-Type:4,ENCRYPTED'):
@@ -176,20 +178,20 @@ class PrivateKey(Crypter):
             raise ValueError('PEM encryption method not supported')
 
         algo, salt = dek[1].split(',')
-        salt = binascii.unhexlify(salt)
+        salt_unhex = binascii.unhexlify(salt)
 
         if algo == 'DES-CBC':
-            key = PBKDF1(self.passphrase, salt, 8, 1, MD5)
-            obj = DES.new(key, DES.MODE_CBC, salt)
+            key = PBKDF1(self.passphrase, salt_unhex, 8, 1, MD5)
+            obj = DES.new(key, DES.MODE_CBC, salt_unhex)
 
         elif algo == 'DES-EDE3-CBC':
-            key = PBKDF1(self.passphrase, salt, 16, 1, MD5)
-            key += PBKDF1(key + self.passphrase, salt, 8, 1, MD5)
-            obj = DES3.new(key, DES3.MODE_CBC, salt)
+            key = PBKDF1(self.passphrase, salt_unhex, 16, 1, MD5)
+            key += PBKDF1(key + self.passphrase, salt_unhex, 8, 1, MD5)
+            obj = DES3.new(key, DES3.MODE_CBC, salt_unhex)
 
         elif algo == 'AES-128-CBC':
-            key = PBKDF1(self.passphrase, salt[:8], 16, 1, MD5)
-            obj = AES.new(key, AES.MODE_CBC, salt)
+            key = PBKDF1(self.passphrase, salt_unhex[:8], 16, 1, MD5)
+            obj = AES.new(key, AES.MODE_CBC, salt_unhex)
 
         else:
             raise TypeError('%s: cipher not supported' % (algo,))
@@ -199,7 +201,7 @@ class PrivateKey(Crypter):
         return unpad(obj.decrypt(data), obj.block_size)
 
     @property
-    def passphrase(self):
+    def passphrase(self) -> Any:
         """
         Return passphrase or prompt the user for one if it's not set
         """
@@ -211,7 +213,7 @@ class PrivateKey(Crypter):
                 os.environ['YKKSM_PASSPHRASE'] = self._passphrase
         return self._passphrase
 
-    def _getpass_cooked(self, prompt):
+    def _getpass_cooked(self, prompt: str) -> str:
         """
         Prompt user for password
         """
@@ -250,7 +252,7 @@ class PrivateKey(Crypter):
             termios.tcsetattr(fd, flg, old)
 
 
-def run():
+def run() -> None:
     """Main entry point."""
     import argparse
 

@@ -13,6 +13,8 @@ import time
 
 import requests
 
+from typing import Any, Dict, Optional
+
 from .config import (
     settings,
     TS_SEC,
@@ -34,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 class Validator:
     """ Yubikey OTP validator """
-    def __init__(self):
+    def __init__(self) -> None:
         self.db = DBHandler(db='ykval')
         if settings['USE_NATIVE_YKKSM']:
             from .ykksm import Decryptor
@@ -47,7 +49,7 @@ class Validator:
         self.sync_level = None
         self.timeout = None
 
-    def check_parameters(self, params):
+    def check_parameters(self, params: Dict[str, Any]) -> None:
         """ Perform Sanity check on parameters """
         params['token_id'] = '?' * 12
         # OTP
@@ -88,7 +90,7 @@ class Validator:
                          'not correct (%(sync_level)s)', params)
             raise YKValError('INVALID_PARAMETER', 'sync_level')
 
-    def get_client_apikey(self, client_id):
+    def get_client_apikey(self, client_id: str) -> bytes:
         """
         Get Client info from DB
 
@@ -111,7 +113,7 @@ class Validator:
             raise YKValError('NO_SUCH_CLIENT')
         return base64.b64decode(client_data['secret'])
 
-    def decode_otp(self, otp):
+    def decode_otp(self, otp: str) -> Dict[str, Any]:
         """
         Call out to KSM to decrypt OTP
         """
@@ -136,7 +138,7 @@ class Validator:
         logger.error("No KSM service provided. Can't decrypt OTP.")
         raise YKValError('BACKEND_ERROR', 'No KSM service found')
 
-    def build_otp_params(self, params, otp_info):
+    def build_otp_params(self, params: Dict[str, Any], otp_info: Dict[str, Any]) -> Dict[str, Any]:
         """ Build OTP params """
         return {
             'modified': int(time.time()),
@@ -149,7 +151,7 @@ class Validator:
             'yk_low': otp_info['low'],
         }
 
-    def validate_otp(self, otp_params, local_params):
+    def validate_otp(self, otp_params: Dict[str, Any], local_params: Dict[str, Any]) -> None:
         """ Validate OTP """
         # First check if OTP is seen with the same nonce, in such case we have an replayed request
         if counters_eq(local_params, otp_params) and local_params['nonce'] == otp_params['nonce']:
@@ -164,7 +166,7 @@ class Validator:
         # Valid OTP, update DB
         self.db.update_db_counters(otp_params)
 
-    def replicate(self, otp_params, local_params, server_nonce):
+    def replicate(self, otp_params: Dict[str, Any], local_params: Dict[str, Any], server_nonce: str) -> Any:
         """ Handle sync across the cluster """
         for server in settings['SYNC_SERVERS']:
             self.db.enqueue(otp_params, local_params, server, server_nonce)
@@ -200,7 +202,7 @@ class Validator:
                 raise YKValError('NOT_ENOUGH_ANSWERS')
         return sync_level_success_rate
 
-    def phishing_test(self, otp_params, local_params):
+    def phishing_test(self, otp_params: Dict[str, Any], local_params: Dict[str, Any]) -> None:
         """
         Run a test against token's internal timer
 
@@ -233,8 +235,8 @@ class Validator:
                          otp_params['yk_publicname'], ts_delta, elapsed, deviation, percent)
             raise YKValError('DELAYED_OTP')
 
-    def verify(self, otp, client_id=None, nonce=None, timestamp=0,
-               timeout=None, sync_level=None):
+    def verify(self, otp: str, client_id: Optional[str] = None, nonce: Optional[str] = None, timestamp: int = 0,
+               timeout: Optional[int] = None, sync_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Yubico OTP Validation Protocol V2.0 Implementation
 
@@ -339,7 +341,7 @@ class Validator:
             extra_params['timestamp'] = (otp_info['yk_high'] << 16) + otp_info['yk_low']
             extra_params['sessioncounter'] = otp_info['yk_counter']
             extra_params['sessionuse'] = otp_info['yk_use']
-        response = {
+        response: Dict[str, Any] = {
             'status': 'OK',
             'time': datetime.utcnow().isoformat().replace('.', 'Z')[:-2]
         }

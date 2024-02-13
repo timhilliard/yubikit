@@ -5,6 +5,7 @@ yubikit.exceptions
 
 List all custom exceptions here
 """
+from typing import Any
 
 STATUS_CODES = {
     # YKAuth
@@ -35,14 +36,14 @@ class YubiKitError(Exception):
     """ YubiKit Exception """
     NAME = 'YubiKit error'
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         super(YubiKitError, self).__init__(*args)
         self.error_code = self.args[0]
 
-    def __str__(self):
+    def __str__(self) -> str:
         message = STATUS_CODES[self.error_code]
         if len(self.args) == 2:
-            message += ': %s' % self.args[1]
+            message += f': {self.args[1]}'
         return message
 
 

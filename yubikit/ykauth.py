@@ -10,7 +10,7 @@ import logging
 import urllib
 
 from passlib.context import CryptContext
-import requests
+# import requests
 
 from .config import (
     settings,
@@ -23,50 +23,50 @@ from .utils import (
     generate_nonce,
 )
 
+from typing import Any, List, Optional
+
 logger = logging.getLogger(__name__)
 
 
-class VerificationClient:
-    """ Verification Client """
-    def __init__(self, urls, client_id=None, apikey=None):
-        self.urls = urls
-        self.client_id = client_id
-        self.apikey = base64.b64decode(apikey)
+# class VerificationClient:
+#     """ Verification Client """
+#     def __init__(self, urls: List[str], client_id: Optional[int] = None, apikey: Optional[str] = None) -> None:
+#         self.urls = urls
+#         self.client_id = client_id
+#         self.apikey = base64.b64decode(apikey)
 
-    def generate_query(self, otp, nonce, timestamp=False, timeout=None,
-                       sync_level=None):
-        """ Generate query """
-        data = [('id', self.client_id),
-                ('otp', otp),
-                ('nonce', nonce)]
-        if timestamp:
-            data.append(('timestamp', '1'))
+#     def generate_query(self, otp: str, nonce: str, timestamp: bool = False, timeout: Optional[int] = None, sync_level: Optional[int] = None) -> str:
+#         """ Generate query """
+#         data = [('id', self.client_id),
+#                 ('otp', otp),
+#                 ('nonce', nonce)]
+#         if timestamp:
+#             data.append(('timestamp', '1'))
 
-        if sync_level is not None:
-            data.append(('sl', sync_level))
+#         if sync_level is not None:
+#             data.append(('sl', sync_level))
 
-        if timeout:
-            data.append(('timeout', timeout))
+#         if timeout:
+#             data.append(('timeout', timeout))
 
-        query_string = urllib.parse.urlencode(data)
-        if self.apikey:
-            signature = sign(dict(data), self.apikey)
-            query_string += '&h=%s' % (signature.replace('+', '%B'))
-        return query_string
+#         query_string = urllib.parse.urlencode(data)
+#         if self.apikey:
+#             signature = sign(dict(data), self.apikey)
+#             query_string += '&h=%s' % (signature.replace('+', '%B'))
+#         return query_string
 
-    def verify(self, otp, timestamp=False, sl=None, timeout=None,
-               return_response=False):
-        """ Make a HTTP call to the Yubikey Verification servers """
-        nonce = generate_nonce()
-        query = self.generate_query(otp, nonce, timestamp=timestamp,
-                                    timeout=timeout, sync_level=sl)
-        req = requests.get(self.urls[0] + '?' + query)
-        print(req.text)
+#     def verify(self, otp: str, timestamp: bool = False, sl=None, timeout=None, return_response: bool = False) -> None:
+#         """ Make a HTTP call to the Yubikey Verification servers """
+#         nonce = generate_nonce()
+#         query = self.generate_query(otp, nonce, timestamp=timestamp,
+#                                     timeout=timeout, sync_level=sl)
+#         req = requests.get(self.urls[0] + '?' + query)
+#         print(req.text)
 
 
 class Client:
     """ Authentication Client """
-    def __init__(self):
+    def __init__(self) -> None:
         self.db = DBHandler(db='yubiauth')
         self.pwd_context = CryptContext(**settings['CRYPT_CONTEXT'])
         if settings['USE_NATIVE_YKVAL']:
@@ -80,7 +80,7 @@ class Client:
                                        settings['YKVAL_CLIENT_SECRET'],
                                        api_urls=settings['YKVAL_SERVERS'])
 
-    def _get_user_info(self, username):
+    def _get_user_info(self, username: str) -> Any:
         """
         Get user from DB
 
@@ -99,7 +99,7 @@ class Client:
         logger.debug('[%s] Found user: %s', username, user)
         return user
 
-    def _check_token(self, user, token_id):
+    def _check_token(self, user: str, token_id: str) -> None:
         """
         Check Token association with user
 
@@ -125,7 +125,7 @@ class Client:
                          user['users_name'], token_id, user['users_name'])
             raise YKAuthError('DISABLED_TOKEN')
 
-    def _validate_password(self, user, password):
+    def _validate_password(self, user: str, password: str) -> bool:
         """
         Validate password against the hash in SQL
         """
@@ -138,7 +138,7 @@ class Client:
             logger.warning('[%(users_name)s] User password hash needs update', user)
         return True
 
-    def authenticate(self, username, password, otp):
+    def authenticate(self, username: str, password: str, otp: str) -> bool:
         """
         Yubikit user authentication
 

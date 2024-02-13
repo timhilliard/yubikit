@@ -5,3 +5,4 @@ yubikit.egg-info
 build
 venv
 .mypy_cache
+.coverage
