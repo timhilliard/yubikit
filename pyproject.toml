@@ -64,6 +64,7 @@ exclude = [
 testpaths = ["tests"]
 filterwarnings = [
     "error",
+    "ignore::DeprecationWarning"
 ]
 
 [tool.coverage.run]

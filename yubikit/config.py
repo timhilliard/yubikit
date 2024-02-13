@@ -12,6 +12,7 @@ __all__ = [
 from importlib.machinery import SourceFileLoader
 import os
 import logging
+from typing import Any, Dict
 
 # CONSTANTS
 TS_SEC = 0.128  # 8Hz timer of the HW token
@@ -52,7 +53,7 @@ VALUES = [
 ]
 
 
-def parse(conf):
+def parse(conf: Any) -> Dict[str, Any]:
     """ Parse settings file parameters into a dict """
     _settings = {}
     for conf_key, default_value in VALUES:

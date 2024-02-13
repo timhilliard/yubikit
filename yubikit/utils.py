@@ -11,12 +11,12 @@ from urllib.parse import parse_qs
 from Crypto.Cipher import AES
 from datetime import datetime
 import hashlib
-import hmac
+from hmac import HMAC
 import logging
 from random import getrandbits
 import re
 
-from typing import cast, Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ def check_crc(token: str) -> bool:
     return calculate_crc(token) == 0xf0b8
 
 
-def sign(data, apikey):
+def sign(data: Dict[str, Any], apikey: bytes) -> str:
     """
     Sign a http query string in the array of key-value pairs
     return b64 encoded hmac hash
@@ -140,9 +140,9 @@ def sign(data, apikey):
     # Do not add whitespace. For example: a=2&b=1&c=3.
     query_string = '&'.join(['%s=%s' % (k, data[k]) for k in keys])
     # Apply the HMAC-SHA-1 algorithm on the line as an octet string using the API key as key
-    signature = hmac.new(apikey, query_string.encode(), hashlib.sha1).digest()
+    signature_raw = HMAC(apikey, query_string.encode(), hashlib.sha1).digest()
     # Base 64 encode the resulting value according to RFC 4648
-    signature = base64.b64encode(signature).decode()
+    signature = base64.b64encode(signature_raw).decode()
     logger.debug('Signed data: %s (H=%s)', query_string, signature)
     return signature
 
