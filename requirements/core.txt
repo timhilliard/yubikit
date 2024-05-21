@@ -8,13 +8,13 @@ certifi==2023.11.17
     # via requests
 charset-normalizer==3.3.2
     # via requests
-idna==3.6
+idna==3.7
     # via requests
 passlib==1.7.4
     # via -r core.in
 pycryptodome==3.20.0
     # via -r core.in
-requests==2.31.0
+requests==2.32.0
     # via -r core.in
 urllib3==2.1.0
     # via requests
